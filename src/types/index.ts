@@ -57,8 +57,11 @@ export interface AuditReport {
     reportHash: string;
     blockNumber: string;
     explorerUrl: string;
+    timestamp?: number;
+    submitter?: string;
   };
   generatedAt: string;
+  provider?: 'groq' | 'gemini' | 'nvidia';
 }
 
 export interface AnalysisState {
@@ -67,4 +70,41 @@ export interface AnalysisState {
   progress?: string;
   report?: AuditReport | null;
   error?: string;
+}
+
+export interface OnChainAuditRecord {
+  auditId: string;
+  contractHash: string;
+  reportHash: string;
+  riskScore: number;
+  issueCount: number;
+  criticalCount: number;
+  timestamp: number;
+  submitter: string;
+  blockNumber: string;
+  txHash: string;
+  explorerUrl: string;
+}
+
+export interface AuditHistoryItem {
+  auditId: string;
+  contractHash: string;
+  riskScore: number;
+  issueCount: number;
+  criticalCount: number;
+  timestamp: number;
+  submitter: string;
+  txHash: string;
+}
+
+export interface VerifyResult {
+  found: boolean;
+  record?: OnChainAuditRecord;
+}
+
+export interface LandingStats {
+  totalAudits: number;
+  totalVulnerabilities: number;
+  avgRiskScore: number;
+  totalCritical: number;
 }

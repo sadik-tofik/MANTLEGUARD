@@ -1,240 +1,165 @@
-'use client';
+import React from 'react';
+import Link from 'next/link';
+import { ShieldCheck, ArrowRight, Activity, Zap, Lock, Globe, Terminal } from 'lucide-react';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import StatsCounter from '@/components/StatsCounter';
+import FeatureCards from '@/components/FeatureCards';
+import HowItWorks from '@/components/HowItWorks';
+import RecentAuditsFeed from '@/components/RecentAuditsFeed';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { 
-  ShieldCheck, 
-  ArrowRight, 
-  RefreshCcw, 
-  Terminal, 
-  Code2, 
-  ChevronRight,
-  ShieldAlert,
-  Ghost
-} from 'lucide-react';
-import { AnalysisProgress } from '@/components/AnalysisProgress';
-import { AuditReportView } from '@/components/AuditReportView';
-import { AuditReport } from '@/types';
-
-const EXAMPLE_CONTRACT = `// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
-
-/**
- * @title VulnerableVault
- * @dev A simple vault with classic security flaws for MantleGuard testing.
- */
-contract VulnerableVault {
-    mapping(address => uint256) public balances;
-    
-    function deposit() external payable {
-        balances[msg.sender] += msg.value;
-    }
-
-    // CRITICAL: Reentrancy vulnerability
-    function withdraw() external {
-        uint256 amount = balances[msg.sender];
-        require(amount > 0, "No balance");
-        
-        (bool success, ) = msg.sender.call{value: amount}("");
-        if (success) {
-            balances[msg.sender] = 0; // State changed AFTER external call
-        }
-    }
-
-    // HIGH: Missing access control on sensitive function
-    function emergencyWithdraw() public {
-        uint256 balance = address(this).balance;
-        payable(msg.sender).transfer(balance);
-    }
-}
-`;
-
-export default function Home() {
-  const [code, setCode] = useState('');
-  const [status, setStatus] = useState<'idle' | 'analyzing' | 'done' | 'error'>('idle');
-  const [step, setStep] = useState(1);
-  const [report, setReport] = useState<AuditReport | null>(null);
-  const [error, setError] = useState<string | undefined>();
-  const resultsRef = useRef<HTMLDivElement>(null);
-
-  const handleAudit = async () => {
-    if (!code.trim()) return;
-    
-    setStatus('analyzing');
-    setStep(1);
-    setReport(null);
-    setError(undefined);
-
-    // Simulate progress animation
-    const progressInterval = setInterval(() => {
-      setStep(prev => (prev < 5 ? prev + 1 : prev));
-    }, 1800);
-
-    try {
-      const res = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sourceCode: code }),
-      });
-      
-      const data = await res.json();
-      
-      if (data.error) throw new Error(data.error);
-      
-      clearInterval(progressInterval);
-      setStep(5);
-      
-      // Artificial delay to feel thorough
-      setTimeout(() => {
-        setReport(data);
-        setStatus('done');
-      }, 800);
-      
-    } catch (err: any) {
-      clearInterval(progressInterval);
-      setError(err.message);
-      setStatus('error');
-    }
-  };
-
-  const handleReset = () => {
-    setStatus('idle');
-    setReport(null);
-    setCode('');
-    setStep(1);
-  };
-
-  useEffect(() => {
-    if (status === 'done' && resultsRef.current) {
-      resultsRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [status]);
-
+export default function LandingPage() {
   return (
-    <main className="min-h-screen relative overflow-x-hidden">
+    <main className="min-h-screen bg-[#0a0a0f] text-white overflow-x-hidden pt-20">
+      <Navbar />
+      
       {/* Background Decor */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/10 blur-[120px] rounded-full" />
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/5 blur-[120px] rounded-full" />
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8 md:py-16 relative z-10">
-        {/* Header */}
-        <div className="flex flex-col items-center text-center space-y-4 mb-12 md:mb-20">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-bold uppercase tracking-widest mb-2">
+      <div className="relative z-10">
+        {/* Section 1: Hero */}
+        <section className="max-w-7xl mx-auto px-4 md:px-8 py-20 md:py-32 flex flex-col items-center text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-black uppercase tracking-widest mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            Hackathon Build — track 05
+            AI DevTools — Mantle Network
           </div>
-          <h1 className="text-4xl md:text-7xl font-bold tracking-tighter text-white">
-            MANTLE<span className="text-emerald-500">GUARD</span>
+          
+          <h1 className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
+            INSTANT SMART CONTRACT<br />
+            <span className="text-emerald-500">SECURITY AUDITS.</span>
           </h1>
-          <p className="text-white/60 text-base md:text-xl max-w-2xl font-medium leading-relaxed">
-            Instant AI-powered smart contract auditing with permanent 
-            <span className="text-white"> cryptographic on-chain proofs</span> on Mantle Network.
+          
+          <p className="text-white/40 text-lg md:text-2xl max-w-3xl font-medium leading-relaxed mb-12 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
+            Powered by Llama 3.3 70B & Groq. Verified forever on Mantle. Get deep security reports with cryptographic proofs in under 10 seconds.
           </p>
-          <div className="flex flex-wrap justify-center gap-4 pt-4">
-            <FeatureBadge icon={<ShieldCheck className="w-4 h-4" />} label="Security Analysis" />
-            <FeatureBadge icon={<RefreshCcw className="w-4 h-4" />} label="On-Chain Hash" />
-            <FeatureBadge icon={<Terminal className="w-4 h-4" />} label="Mantle Optimized" />
+          
+          <div className="flex flex-col md:flex-row gap-6 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
+            <Link 
+              href="/audit" 
+              className="px-8 py-5 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xl rounded-2xl transition-all shadow-2xl shadow-emerald-500/20 active:scale-95 flex items-center gap-3"
+            >
+              Audit Your Contract
+              <ArrowRight className="w-6 h-6" />
+            </Link>
+            <Link 
+              href="/audit?example=true" 
+              className="px-8 py-5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-black text-xl rounded-2xl transition-all active:scale-95"
+            >
+              View Live Example
+            </Link>
           </div>
-        </div>
 
-        {/* Action Section */}
-        <div className="max-w-4xl mx-auto space-y-8">
-          {(status === 'idle' || status === 'error') && (
-            <div className="space-y-6 animate-in fade-in duration-1000">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-white/40 text-sm font-bold uppercase tracking-wider">
-                  <Code2 className="w-4 h-4" />
-                  Source Code Input
+          <div className="mt-20 grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-8 opacity-40 animate-in fade-in duration-1000 delay-500 font-black uppercase tracking-widest text-[10px]">
+            <div className="flex items-center gap-2 justify-center"><ShieldCheck className="w-4 h-4" /> AI Analysis</div>
+            <div className="flex items-center gap-2 justify-center"><Lock className="w-4 h-4" /> On-Chain Proof</div>
+            <div className="flex items-center gap-2 justify-center"><Zap className="w-4 h-4" /> 10s Results</div>
+            <div className="flex items-center gap-2 justify-center"><Globe className="w-4 h-4" /> Free Forever</div>
+            <div className="flex items-center gap-2 justify-center"><Terminal className="w-4 h-4" /> Mantle Native</div>
+          </div>
+        </section>
+
+        {/* Section 2: Key Stats */}
+        <section className="bg-white/[0.01] border-y border-white/5 py-20">
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <StatsCounter value="10" label="Audit Time" sublabel="vs 2-4 weeks manual" suffix="s" prefix="< " />
+              <StatsCounter value="0" label="Cost to Audit" sublabel="vs $5k-$50k firms" prefix="$" />
+              <StatsCounter value="100" label="On-Chain" sublabel="via Mantle Network" suffix="%" />
+              <StatsCounter value="50" label="Vulnerabilities" sublabel="including Mantle-specific" suffix="+" />
+            </div>
+          </div>
+        </section>
+
+        {/* Section 3: Feature Cards */}
+        <section className="max-w-7xl mx-auto px-4 md:px-8 py-32">
+          <div className="text-center space-y-4 mb-20">
+            <h2 className="text-4xl md:text-6xl font-black tracking-tighter">WHY MANTLEGUARD?</h2>
+            <p className="text-white/40 text-lg max-w-2xl mx-auto">The gold standard for automated smart contract security in the Mantle ecosystem.</p>
+          </div>
+          <FeatureCards />
+        </section>
+
+        {/* Section 4: How It Works */}
+        <section id="how-it-works" className="bg-[#050508] py-32">
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
+            <div className="text-center space-y-4 mb-20">
+              <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase">How It works</h2>
+              <p className="text-white/40 text-lg max-w-2xl mx-auto">From terminal to blockchain in three simple steps.</p>
+            </div>
+            <HowItWorks />
+          </div>
+        </section>
+
+        {/* Section 5: Recent Audits Live Feed */}
+        <section className="max-w-7xl mx-auto px-4 md:px-8 py-32">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+            <div className="space-y-8">
+              <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">
+                Recent Audits <br />
+                <span className="text-emerald-500">Live Feed</span>
+              </h2>
+              <p className="text-white/40 text-lg md:text-xl font-medium leading-relaxed">
+                Real-time visibility into the Mantle ecosystem security landscape. Every entry below is a live event pulled directly from the Mantle Sepolia network.
+              </p>
+              <div className="flex items-center gap-6 pt-4">
+                <div className="flex flex-col">
+                  <span className="text-2xl font-black text-white">5003</span>
+                  <span className="text-[10px] font-black uppercase text-white/20 tracking-widest">Chain ID</span>
                 </div>
-                <button 
-                  onClick={() => setCode(EXAMPLE_CONTRACT)}
-                  className="text-emerald-500 text-sm font-bold hover:text-emerald-400 transition-colors flex items-center gap-1 group"
-                >
-                  Load example <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </button>
+                <div className="w-[1px] h-10 bg-white/10" />
+                <div className="flex flex-col">
+                  <span className="text-2xl font-black text-white">Mantle</span>
+                  <span className="text-[10px] font-black uppercase text-white/20 tracking-widest">Sepolia Testnet</span>
+                </div>
               </div>
-
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 rounded-2xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
-                <div className="relative glass rounded-2xl overflow-hidden border border-white/10 group-focus-within:border-emerald-500/30 transition-all">
-                  {/* Fake Editor Chrome */}
-                  <div className="bg-white/5 border-b border-white/5 px-4 py-3 flex items-center gap-2">
-                    <div className="flex gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/40" />
-                    </div>
-                    <span className="text-[10px] font-mono text-white/20 uppercase tracking-widest ml-2">contract.sol (Read/Write)</span>
-                  </div>
-                  <textarea
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    placeholder="// Paste your Solidity contract here..."
-                    spellCheck={false}
-                    className="w-full h-80 p-8 bg-transparent text-white/80 font-mono text-sm leading-relaxed focus:outline-none resize-none"
-                  />
+            </div>
+            
+            <div className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-br from-emerald-500/20 to-blue-500/20 rounded-[32px] blur-2xl opacity-50" />
+              <div className="relative bg-[#0a0a0f] border border-white/10 rounded-[32px] p-8 shadow-2xl">
+                <div className="flex items-center justify-between mb-8">
+                   <div className="flex items-center gap-2">
+                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                     <span className="text-xs font-black uppercase tracking-widest text-white/40">Network Activity</span>
+                   </div>
+                   <Activity className="w-4 h-4 text-emerald-500/50" />
                 </div>
+                <RecentAuditsFeed />
               </div>
+            </div>
+          </div>
+        </section>
 
-              {error && (
-                <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400 text-sm animate-in shake duration-500">
-                  <ShieldAlert className="w-5 h-5 flex-shrink-0" />
-                  {error}
-                </div>
-              )}
-
-              <button
-                onClick={handleAudit}
-                disabled={!code.trim()}
-                className="w-full py-5 bg-emerald-500 hover:bg-emerald-400 disabled:bg-white/5 disabled:hover:bg-white/5 disabled:text-white/20 text-black font-extrabold text-lg rounded-2xl transition-all shadow-xl shadow-emerald-500/10 active:scale-[0.99] flex items-center justify-center gap-3 group"
+        {/* Section 6: Final CTA */}
+        <section className="max-w-7xl mx-auto px-4 md:px-8 py-32 text-center relative overflow-hidden">
+           <div className="relative z-10 space-y-10">
+              <h2 className="text-5xl md:text-8xl font-black tracking-tighter uppercase leading-[0.9]">
+                Ready to secure <br />
+                your contract?
+              </h2>
+              <p className="text-white/40 text-lg md:text-2xl max-w-2xl mx-auto font-medium">
+                Join the developers building securely on Mantle. <br />
+                Free forever. Results in 10 seconds.
+              </p>
+              <Link 
+                href="/audit" 
+                className="inline-flex px-12 py-6 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-2xl rounded-2xl transition-all shadow-2xl shadow-emerald-500/20 active:scale-95 items-center gap-4"
               >
-                <ShieldCheck className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                Audit Contract
-              </button>
-            </div>
-          )}
+                Audit Your Contract Now
+                <ArrowRight className="w-8 h-8" />
+              </Link>
+           </div>
+           
+           {/* Decorative background for CTA */}
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[600px] bg-emerald-500/5 blur-[150px] rounded-full -z-10" />
+        </section>
 
-          {status === 'analyzing' && (
-            <div className="flex flex-col items-center py-20 animate-in fade-in zoom-in duration-500">
-              <AnalysisProgress step={step} />
-            </div>
-          )}
-
-          {status === 'done' && report && (
-            <div ref={resultsRef} className="space-y-8 pb-20">
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={handleReset}
-                  className="flex items-center gap-2 text-white/40 hover:text-white transition-colors text-sm font-bold group"
-                >
-                  <ChevronRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform" />
-                  New audit
-                </button>
-              </div>
-              <AuditReportView report={report} sourceCode={code} />
-            </div>
-          )}
-        </div>
+        <Footer />
       </div>
-
-      {/* Footer */}
-      <footer className="max-w-6xl mx-auto px-4 py-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div className="flex items-center gap-2 text-white/20 text-sm font-mono">
-          <Ghost className="w-4 h-4" />
-          Mantle Turing Test Hackathon 2026
-        </div>
-        <div className="text-white/20 text-[10px] font-bold uppercase tracking-[0.2em]">
-          Securing the Mantle Ecosystem with Intelligence
-        </div>
-      </footer>
     </main>
   );
 }
-
-const FeatureBadge = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
-  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/5 bg-white/[0.02] text-white/40 text-xs font-semibold">
-    {icon}
-    {label}
-  </div>
-);

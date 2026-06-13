@@ -1,4 +1,4 @@
-import { defineChain } from 'viem';
+import { defineChain, createPublicClient, http } from 'viem';
 
 export const mantleMainnet = defineChain({
   id: 5000,
@@ -36,7 +36,7 @@ export const NETWORK = process.env.NEXT_PUBLIC_NETWORK === 'mainnet' ? mantleMai
 
 export const AUDIT_REGISTRY_ADDRESS =
   (process.env.NEXT_PUBLIC_REGISTRY_ADDRESS as `0x${string}`) ||
-  '0x0000000000000000000000000000000000000000';
+  '0xC28466F4eFE74422684D84182945fAc02ecA6d82';
 
 export const AUDIT_REGISTRY_ABI = [
   {
@@ -67,6 +67,22 @@ export const AUDIT_REGISTRY_ABI = [
   },
   {
     "type": "function",
+    "name": "audits", // Matches the public mapping getter
+    "inputs": [{ "name": "auditId", "type": "bytes32" }],
+    "outputs": [
+      { "name": "contractHash", "type": "bytes32" },
+      { "name": "reportHash", "type": "bytes32" },
+      { "name": "riskScore", "type": "uint8" },
+      { "name": "issueCount", "type": "uint32" },
+      { "name": "criticalCount", "type": "uint32" },
+      { "name": "timestamp", "type": "uint64" },
+      { "name": "submitter", "type": "address" },
+      { "name": "ipfsCid", "type": "string" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "totalAudits",
     "inputs": [],
     "outputs": [{ "type": "uint256" }],
@@ -86,3 +102,8 @@ export const AUDIT_REGISTRY_ABI = [
     ]
   }
 ] as const;
+
+export const publicClient = createPublicClient({
+  chain: NETWORK,
+  transport: http(),
+});

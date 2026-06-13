@@ -1,0 +1,119 @@
+import { keccak256, toBytes } from 'viem';
+import { 
+  publicClient, 
+  AUDIT_REGISTRY_ADDRESS, 
+  AUDIT_REGISTRY_ABI,
+  NETWORK
+} from './mantle';
+import { OnChainAuditRecord } from '@/types';
+
+export async function getAuditById(auditId: string): Promise<OnChainAuditRecord | null> {
+  try {
+    const data = await publicClient.readContract({
+      address: AUDIT_REGISTRY_ADDRESS,
+      abi: AUDIT_REGISTRY_ABI,
+      functionName: 'audits', // Changed from getAuditById to call the public mapping directly
+      args: [auditId as `0x${string}`],
+    }) as any;
+
+    if (!data || data[0] === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+      return null;
+    }
+
+    return {
+      auditId,
+      contractHash: data[0],
+      reportHash: data[1],
+      riskScore: Number(data[2]),
+      issueCount: Number(data[3]),
+      criticalCount: Number(data[4]),
+      timestamp: Number(data[5]),
+      submitter: data[6],
+      blockNumber: '0',
+      txHash: '',
+      explorerUrl: NETWORK.blockExplorers.default.url,
+    };
+  } catch (error) {
+    console.error('Error fetching audit by ID:', error);
+    return null;
+  }
+}
+
+export async function verifyByContractHash(contractHash: string): Promise<{ exists: boolean; auditId: string | null }> {
+  try {
+    const data = await publicClient.readContract({
+      address: AUDIT_REGISTRY_ADDRESS,
+      abi: AUDIT_REGISTRY_ABI,
+      functionName: 'verifyContract',
+      args: [contractHash as `0x${string}`],
+    }) as any;
+
+    return {
+      exists: data[0],
+      auditId: data[1],
+    };
+  } catch (error) {
+    console.error('Error verifying contract hash:', error);
+    return { exists: false, auditId: null };
+  }
+}
+
+export async function getRecentAudits(count: number = 5) {
+  try {
+    // Mantle Sepolia RPC limits block range to 10000. 
+    // We fetch current block and query only the recent range.
+    const currentBlock = await publicClient.getBlockNumber();
+    const fromBlock = currentBlock - BigInt(9999) > BigInt(0) ? currentBlock - BigInt(9999) : BigInt(0);
+
+    const logs = await publicClient.getLogs({
+      address: AUDIT_REGISTRY_ADDRESS,
+      event: {
+        type: 'event',
+        name: 'AuditSubmitted',
+        inputs: [
+          { name: 'auditId', type: 'bytes32', indexed: true },
+          { name: 'contractHash', type: 'bytes32', indexed: true },
+          { name: 'submitter', type: 'address', indexed: true },
+          { name: 'riskScore', type: 'uint8' },
+          { name: 'issueCount', type: 'uint32' },
+          { name: 'criticalCount', type: 'uint32' },
+          { name: 'timestamp', type: 'uint64' }
+        ]
+      },
+      fromBlock,
+      toBlock: 'latest',
+    });
+
+    return logs
+      .sort((a, b) => Number(b.blockNumber - a.blockNumber))
+      .slice(0, count)
+      .map(log => ({
+        auditId: log.args.auditId,
+        contractHash: log.args.contractHash,
+        submitter: log.args.submitter,
+        riskScore: Number(log.args.riskScore),
+        issueCount: Number(log.args.issueCount),
+        criticalCount: Number(log.args.criticalCount),
+        timestamp: Number(log.args.timestamp),
+        txHash: log.transactionHash,
+        blockNumber: log.blockNumber.toString(),
+      }));
+  } catch (error) {
+    console.error('Error fetching recent audits:', error);
+    return [];
+  }
+}
+
+export async function getTotalAudits(): Promise<number> {
+  try {
+    const total = await publicClient.readContract({
+      address: AUDIT_REGISTRY_ADDRESS,
+      abi: AUDIT_REGISTRY_ABI,
+      functionName: 'totalAudits',
+    }) as bigint;
+    return Number(total);
+  } catch (error) {
+    console.error('Error fetching total audits:', error);
+    return 0;
+  }
+}

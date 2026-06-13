@@ -1,0 +1,68 @@
+name: MantleGuard Security Audit
+
+on:
+  push:
+    paths:
+      - "contracts/**/*.sol"
+      - "src/**/*.sol"
+  pull_request:
+    paths:
+      - "contracts/**/*.sol"
+      - "src/**/*.sol"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: MantleGuard Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Find Solidity Files
+        id: find-contracts
+        run: |
+          # Find up to 5 solidity files to audit
+          FILES=$(find . -name "*.sol" -not -path "*/node_modules/*" | head -5 | tr '\n' ' ')
+          echo "contracts=$FILES" >> $GITHUB_OUTPUT
+          echo "Found contracts: $FILES"
+
+      - name: Perform AI Audit
+        run: |
+          for contract in ${{ steps.find-contracts.outputs.contracts }}; do
+            echo "------------------------------------------------"
+            echo "Auditing $contract..."
+            
+            # Read contract content and escape for JSON
+            CONTENT=$(cat "$contract" | jq -Rs .)
+            
+            # Call MantleGuard API
+            RESPONSE=$(curl -s -X POST https://mantleguard.vercel.app/api/analyze \
+              -H "Content-Type: application/json" \
+              -H "X-MantleGuard-Source: ci" \
+              -d "{\"sourceCode\": $CONTENT}")
+            
+            # Check for errors in response
+            if echo "$RESPONSE" | jq -e '.error' > /dev/null; then
+              echo "Error auditing $contract: $(echo "$RESPONSE" | jq -r '.error')"
+              continue
+            fi
+            
+            # Extract results
+            RISK=$(echo "$RESPONSE" | jq -r '.riskScore')
+            CRITICAL=$(echo "$RESPONSE" | jq -r '.stats.critical')
+            HIGH=$(echo "$RESPONSE" | jq -r '.stats.high')
+            
+            echo "Analysis Complete for $contract"
+            echo "Risk Score: $RISK/100"
+            echo "Critical Issues: $CRITICAL"
+            echo "High Issues: $HIGH"
+            
+            # Fail if critical issues found
+            if [ "$CRITICAL" -gt 0 ]; then
+              echo "::error file=$contract::CRITICAL VULNERABILITIES DETECTED by MantleGuard"
+              exit 1
+            fi
+          done
+          echo "------------------------------------------------"
+          echo "All contracts passed MantleGuard security checks."
