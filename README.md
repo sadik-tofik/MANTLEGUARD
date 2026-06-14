@@ -28,18 +28,20 @@
 - **Mantle Native**: Specific checks for mETH, USDY, and L2 gas optimizations.
 - **Verified Certificates**: Shareable, tamper-proof audit certificates with unique Audit IDs.
 - **CI/CD Integration**: GitHub Actions template for automated security checks on every commit.
-- **Self-Optimized Core**: The `AuditRegistry` contract was optimized using MantleGuard, resulting in a **10% Reduction in Gas Fees**.
+- **Self-Hardened Core**: The `AuditRegistry` contract was audited by MantleGuard itself, and the AI-recommended `ReentrancyGuard` and input-validation fixes were applied before the final verified deployment.
 
 ---
 
 ## 🛡️ Self-Hardening Case Study
 
-To demonstrate the power of MantleGuard, we audited our own `AuditRegistry.sol` contract and applied the AI-suggested improvements.
-
-- **Security**: Closed reentrancy vectors and implemented Checks-Effects-Interactions patterns.
-- **Gas**: Achieved a **~10% reduction in deployment and execution costs** (averaging from 0.1 MNT down to 0.09 MNT per submission) by optimizing storage pointers.
-- **Score**: Improved our own security score from "Warning" to "Golden Pass".
-
+To prove MantleGuard's value, we ran our own first deployed `AuditRegistry.sol` through MantleGuard before finalizing this project — and applied the fixes it recommended.
+ 
+- **Findings**: MantleGuard flagged a reentrancy risk in `submitAudit()` and recommended adding OpenZeppelin's `ReentrancyGuard`, plus stricter input validation for hashes, addresses, and IPFS CIDs.
+- **Fixes Applied**: The hardened contract adds `ReentrancyGuard`, a Checks-Effects-Interactions pattern, and new explicit validation errors (`AuditAlreadyExists`, `InvalidAddress`, `InvalidIPFS`) that did not exist in the original version.
+- **Verifiable On-Chain**:
+  - **Original contract** (pre-audit, unverified): [`0x63027A5831b851F3311031BF0756FdB9186c2a3D`](https://sepolia.mantlescan.xyz/address/0x63027A5831b851F3311031BF0756FdB9186c2a3D)
+  - **Hardened contract** (post-audit, verified, current production): [`0xC28466F4eFE74422684D84182945fAc02ecA6d82`](https://sepolia.mantlescan.xyz/address/0xC28466F4eFE74422684D84182945fAc02ecA6d82)
+- **Result**: MantleGuard helped harden the exact contract it now runs on — a real, checkable example of AI output becoming a deployed, verified blockchain fact.
 ---
 
 ## 🛠 Tech Stack
@@ -52,16 +54,19 @@ To demonstrate the power of MantleGuard, we audited our own `AuditRegistry.sol` 
 ---
 
 ## 📐 Architecture
+
 ![Architecture](public/screenshots/mantleguard_architecture_diagram.png)
+
 ## 📸 Screenshots
 
-| Landing Page | Audit Report |
-|---|---|
+| Landing Page                               | Audit Report                             |
+| ------------------------------------------ | ---------------------------------------- |
 | ![Landing](public/screenshots/landing.png) | ![Report](public/screenshots/report.png) |
 
-| On-Chain Proof | Mantle Explorer |
-|---|---|
+| On-Chain Proof                         | Mantle Explorer                              |
+| -------------------------------------- | -------------------------------------------- |
 | ![Proof](public/screenshots/proof.png) | ![Explorer](public/screenshots/explorer.png) |
+
 ---
 
 ## 📦 Getting Started
