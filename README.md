@@ -52,22 +52,7 @@ To demonstrate the power of MantleGuard, we audited our own `AuditRegistry.sol` 
 ---
 
 ## 📐 Architecture
-
-```mermaid
-graph LR
-    B --> C[/api/analyze]
-    C --> D[Groq API - Llama 3.3 70B]
-    D -->|Fallback| E[Gemini 2.0 Flash]
-    E -->|Fallback| F[NVIDIA NIM API]
-    D --> G[Structured JSON Report]
-    G --> B
-    B --> H[/api/submit-onchain]
-    H --> I[viem Wallet Client]
-    I --> J[AuditRegistry.sol]
-    J --> K[Mantle Sepolia Chain ID 5003]
-    K --> L[auditId returned]
-    L --> B
-```
+![Architecture](public/screenshots/mantleguard_architecture_diagram.png)
 ## 📸 Screenshots
 
 | Landing Page | Audit Report |
