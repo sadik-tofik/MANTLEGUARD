@@ -45,18 +45,24 @@ export default function AuditHistoryTable({ audits, loading }: AuditHistoryTable
             <tr key={audit.auditId} className="group bg-white/[0.02] hover:bg-white/[0.05] transition-colors border border-white/5">
               <td className="px-6 py-5 rounded-l-2xl border-y border-l border-white/5 group-hover:border-emerald-500/20 transition-colors">
                 <div className="flex items-center gap-3">
-                  <Link 
-                    href={`/audit/${audit.auditId}`}
-                    className="text-sm font-mono text-white/80 hover:text-emerald-400 transition-colors"
-                  >
-                    {audit.auditId.slice(0, 10)}...{audit.auditId.slice(-8)}
-                  </Link>
-                  <button 
-                    onClick={() => copyToClipboard(audit.auditId)}
-                    className="text-white/10 hover:text-white transition-colors"
-                  >
-                    <Copy className="w-3 h-3" />
-                  </button>
+                  {audit.auditId ? (
+                    <>
+                      <Link
+                        href={`/audit/${audit.auditId}`}
+                        className="text-sm font-mono text-white/80 hover:text-emerald-400 transition-colors"
+                      >
+                        {audit.auditId.slice(0, 10)}...{audit.auditId.slice(-8)}
+                      </Link>
+                      <button
+                        onClick={() => copyToClipboard(audit.auditId)}
+                        className="text-white/10 hover:text-white transition-colors"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-sm font-mono text-white/40">N/A</span>
+                  )}
                 </div>
               </td>
               <td className="px-6 py-5 border-y border-white/5 group-hover:border-emerald-500/20 transition-colors text-center">
@@ -106,12 +112,16 @@ export default function AuditHistoryTable({ audits, loading }: AuditHistoryTable
                   >
                     <ExternalLink className="w-4 h-4" />
                   </Link>
-                  <Link 
-                    href={`/audit/${audit.auditId}`}
-                    className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-all font-bold text-xs flex items-center gap-1"
-                  >
-                    View <ChevronRight className="w-3 h-3" />
-                  </Link>
+                  {audit.auditId ? (
+                    <Link
+                      href={`/audit/${audit.auditId}`}
+                      className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-all font-bold text-xs flex items-center gap-1"
+                    >
+                      View <ChevronRight className="w-3 h-3" />
+                    </Link>
+                  ) : (
+                    <button className="p-2 rounded-lg bg-white/5 text-white/20 cursor-not-allowed text-xs">View</button>
+                  )}
                 </div>
               </td>
             </tr>
