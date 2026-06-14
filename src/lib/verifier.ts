@@ -20,7 +20,8 @@ export async function getAuditById(auditId: string): Promise<OnChainAuditRecord 
       return null;
     }
 
-    return {
+    // Normalize values
+    const record: OnChainAuditRecord = {
       auditId,
       contractHash: data[0],
       reportHash: data[1],
@@ -33,6 +34,57 @@ export async function getAuditById(auditId: string): Promise<OnChainAuditRecord 
       txHash: '',
       explorerUrl: NETWORK.blockExplorers.default.url,
     };
+
+    // Attempt to find the emitting transaction by scanning recent logs for the AuditSubmitted event
+    try {
+      const currentBlock = await publicClient.getBlockNumber();
+      const fromBlock = currentBlock - BigInt(9999) > BigInt(0) ? currentBlock - BigInt(9999) : BigInt(0);
+
+      const logs = await publicClient.getLogs({
+        address: AUDIT_REGISTRY_ADDRESS,
+        event: {
+          type: 'event',
+          name: 'AuditSubmitted',
+          inputs: [
+            { name: 'auditId', type: 'bytes32', indexed: true },
+            { name: 'contractHash', type: 'bytes32', indexed: true },
+            { name: 'submitter', type: 'address', indexed: true },
+            { name: 'riskScore', type: 'uint8' },
+            { name: 'issueCount', type: 'uint32' },
+            { name: 'criticalCount', type: 'uint32' },
+            { name: 'timestamp', type: 'uint64' }
+          ]
+        },
+        fromBlock,
+        toBlock: 'latest',
+      });
+
+      // Helper to convert possible bytes to hex string for comparison
+      const toHex = (v: any) => {
+        if (!v && v !== 0) return null;
+        if (typeof v === 'string') return v.toLowerCase();
+        if (typeof Buffer !== 'undefined' && (v instanceof Uint8Array || Array.isArray(v))) {
+          return '0x' + Buffer.from(v as any).toString('hex');
+        }
+        try { return String(v).toLowerCase(); } catch { return null; }
+      };
+
+      const target = auditId.toLowerCase();
+      for (const log of logs) {
+        const aid = toHex(log.args.auditId);
+        if (aid === target) {
+          record.txHash = log.transactionHash || '';
+          record.blockNumber = log.blockNumber?.toString() || '0';
+          record.explorerUrl = record.txHash ? `${NETWORK.blockExplorers.default.url}/tx/${record.txHash}` : NETWORK.blockExplorers.default.url;
+          break;
+        }
+      }
+    } catch (e) {
+      // Non-fatal: if logs cannot be fetched, return what we have
+      console.error('Error searching logs for auditId tx:', e);
+    }
+
+    return record;
   } catch (error) {
     console.error('Error fetching audit by ID:', error);
     return null;
