@@ -16,7 +16,7 @@
 
 - **Live App**: [mantleguard.vercel.app](https://mantleguard.vercel.app)
 - **Deployed Contract**: [0xC28466F4eFE74422684D84182945fAc02ecA6d82](https://explorer.sepolia.mantle.xyz/address/0xC28466F4eFE74422684D84182945fAc02ecA6d82)
-- **Demo Video**: [Watch demo](https://youtu.be/c1pAbGkFwTc)
+- **Demo Video**: ![youtube](https://www.youtube.com/watch?v=c1pAbGkFwTc)
 
 ---
 
