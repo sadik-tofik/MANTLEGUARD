@@ -87,17 +87,35 @@ export async function getRecentAudits(count: number = 5) {
     return logs
       .sort((a, b) => Number(b.blockNumber - a.blockNumber))
       .slice(0, count)
-      .map(log => ({
-        auditId: log.args.auditId,
-        contractHash: log.args.contractHash,
-        submitter: log.args.submitter,
-        riskScore: Number(log.args.riskScore),
-        issueCount: Number(log.args.issueCount),
-        criticalCount: Number(log.args.criticalCount),
-        timestamp: Number(log.args.timestamp),
-        txHash: log.transactionHash,
-        blockNumber: log.blockNumber.toString(),
-      }));
+      .map(log => {
+        // Normalize bytes32 fields to hex strings so frontend receives strings
+        const normalize = (v: any) => {
+          if (!v && v !== 0) return null;
+          // If already a string (e.g. '0x...') return as-is
+          if (typeof v === 'string') return v;
+          // If it's a Uint8Array or Buffer-like, convert to hex
+          if (typeof Buffer !== 'undefined' && (v instanceof Uint8Array || Array.isArray(v))) {
+            return '0x' + Buffer.from(v as any).toString('hex');
+          }
+          try {
+            return String(v);
+          } catch (e) {
+            return null;
+          }
+        };
+
+        return {
+          auditId: normalize(log.args.auditId),
+          contractHash: normalize(log.args.contractHash),
+          submitter: log.args.submitter,
+          riskScore: Number(log.args.riskScore),
+          issueCount: Number(log.args.issueCount),
+          criticalCount: Number(log.args.criticalCount),
+          timestamp: Number(log.args.timestamp),
+          txHash: log.transactionHash,
+          blockNumber: log.blockNumber.toString(),
+        };
+      });
   } catch (error) {
     console.error('Error fetching recent audits:', error);
     return [];
